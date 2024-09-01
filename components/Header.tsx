@@ -1,9 +1,10 @@
 "use client"
-import { LOGIN } from "@/routes/routes";
+
 import Link from "next/link";
 import React, { useState } from "react";
 import SharePicPopup from "./SharePicPopup";
 import BlueButton from "./BlueButton";
+import { LOGIN } from "@/routes/routes";
 
 type Props = {};
 
@@ -43,10 +44,8 @@ const Header = (props: Props) => {
       {/* Log in Button for Logged-out User */}
       <div className="mt-4 sm:mt-0 text-center flex-shrink-0">
 
-       <Link href={LOGIN} >
-       <BlueButton value="Login" />
-     
-        </Link>
+       <BlueButton href={LOGIN} value="Login" />
+       
       </div>
     </div>
     <SharePicPopup    isOpen={IsSharePicPopup}
