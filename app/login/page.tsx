@@ -1,7 +1,7 @@
 "use client";
 
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const Login = () => {
@@ -11,6 +11,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter(); 
 
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      
+      router.replace('/');
+    }
+  }, [router]);
   const validateForm = () => {
     if (username.trim() === '') {
       setError('Username is required.');
@@ -43,8 +50,9 @@ const Login = () => {
       localStorage.setItem('userId', userId); 
       setError('');
       
-   
       router.push('/');
+     
+   
     } catch (err) {
       setError('Failed to login. Please try again.');
     } finally {

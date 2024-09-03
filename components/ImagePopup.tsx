@@ -5,10 +5,13 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   imageSrc: string;
-  imageDescription: string;
+  username: string;
+  date: string;
 };
 
-const ImagePopup: React.FC<ModalProps> = ({ isOpen, onClose, imageSrc,  imageDescription, }) => {
+const ImagePopup: React.FC<ModalProps> = ({ isOpen, onClose,  imageSrc,
+  username,
+  date, }) => {
   if (!isOpen) return null;
 
   return (
@@ -16,8 +19,8 @@ const ImagePopup: React.FC<ModalProps> = ({ isOpen, onClose, imageSrc,  imageDes
       <div className="bg-black p-3 rounded-lg">
         <div className="flex flex-row justify-between">
             <div className="flex flex-row space-x-6 text-white text-base font-normal">
-            <p>{imageDescription} </p>
-         
+            <p>{username}  </p> <p>{ date}</p>
+
             </div>
             
         <button
