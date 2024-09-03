@@ -2,15 +2,32 @@
 
 import axios from 'axios';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [userId, setUserId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter(); 
+
+  const validateForm = () => {
+    if (username.trim() === '') {
+      setError('Username is required.');
+      return false;
+    }
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters long.');
+      return false;
+    }
+    setError(''); // Clear any previous errors
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:3000/user/login', 
@@ -23,8 +40,11 @@ const Login = () => {
       );
       const { userId } = response.data;
       setUserId(userId);
-      localStorage.setItem('userId', userId); // Store user ID in local storage
+      localStorage.setItem('userId', userId); 
       setError('');
+      
+   
+      router.push('/');
     } catch (err) {
       setError('Failed to login. Please try again.');
     } finally {
@@ -58,7 +78,7 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
-        {userId && <p className="text-green-500 mt-4">Logged in! User ID: {userId}</p>}
+        {userId && <p className="text-green-500 mt-4">Logged in! Redirecting to home...</p>}
         {error && <p className="text-red-500 mt-4">Error: {error}</p>}
       </div>
     </div>
