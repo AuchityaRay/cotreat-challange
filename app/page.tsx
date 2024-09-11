@@ -1,31 +1,11 @@
-"use client";
-import Card from "@/components/Card";
-import useAuth from "@/hooks/useAuth";
-import { LOGIN } from "@/routes/routes";
-import Image from "next/image";
-import Link from "next/link";
+import HomePage from "@/components/HomePage"; // This will be the client-side component
+import { cookies } from "next/headers";
 
 export default function Home() {
-  const { isLoggedIn, username, logout } = useAuth();
-  return (
-    <>
-      <div className="flex flex-col space-y-6 max-w-6xl w-full py-5 mx-auto">
-        {!isLoggedIn && (
-          
-         
-          <div className="bg-picShare-color text-center p-3 rounded-md">
-          <p className="text-base font-normal ">
-            <Link href={LOGIN} className="text-daybreak-blue">
-              Login{" "}
-            </Link>
-            to start sharing your favourite pictures with others!
-          </p>
-        </div>
-        )}
-        <div>
-          <Card />
-        </div>
-      </div>
-    </>
-  );
+  const cookieStore = cookies();
+  const userId = cookieStore.get("userId")?.value;
+
+  const loggedIn = !!userId;
+
+  return <HomePage loggedIn={loggedIn} />;
 }

@@ -6,9 +6,13 @@ import ImagePopup from "./ImagePopup";
 import useAuth from "@/hooks/useAuth";
 import useSharedImages from "@/hooks/useSharedImages";
 import useFavorites from "@/hooks/useFavorites";
+
 type CardProps = {
   favoritesOnly?: boolean;
 };
+
+const ITEMS_PER_PAGE = 8; 
+
 const SkeletonCard = () => (
   <div className="flex flex-col space-y-4 justify-center shadow-custom-drop p-3 bg-white w-[220px] h-[313px] rounded-xl mx-auto animate-pulse">
     <div className="bg-gray-300 w-full h-48 rounded-lg"></div>
@@ -18,7 +22,6 @@ const SkeletonCard = () => (
 );
 
 const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
-
   const { isLoggedIn } = useAuth();
   const { images, loading, error } = useSharedImages();
   const { favorites, toggleFavorite } = useFavorites();
@@ -27,6 +30,7 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
   const [selectUsername, setSelectUsername] = useState<string>("");
   const [selectDate, setSelectDate] = useState<string>("");
 
+  const [currentPage, setCurrentPage] = useState(1); // Track the current page
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -40,26 +44,34 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
     setSelectDate(date);
     setIsModalOpen(true);
   };
+
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  
+  const lastImageElementRef = useCallback((node: HTMLDivElement) => {
+    if (observer.current) observer.current.disconnect();
 
-    const lastImageElementRef = useCallback((node: HTMLDivElement) => {
-      if (observer.current) observer.current.disconnect();
-  
-      observer.current = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.remove("lazy-load");
-            observer.current?.unobserve(entry.target);
-          }
-        });
+    observer.current = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove("lazy-load");
+          observer.current?.unobserve(entry.target);
+        }
       });
-  
-      if (node) observer.current.observe(node);
-    }, []);
+    });
+
+    if (node) observer.current.observe(node);
+  }, []);
+
+  // Pagination logic: calculate the images to display on the current page
+  const displayedImages = favoritesOnly
+    ? images.filter((image) => favorites[image.id])
+    : images;
+
+  const totalPages = Math.ceil(displayedImages.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedImages = displayedImages.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   if (loading) {
     return (
@@ -74,23 +86,32 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
   if (error) {
     return <p className="text-red-500 text-center">{error}</p>;
   }
-  const displayedImages = favoritesOnly
-  ? images.filter((image) => favorites[image.id])
-  : images;
-  if (displayedImages.length === 0) {
+
+  if (paginatedImages.length === 0) {
     return <p className="text-center text-gray-500">No favorite pictures found.</p>;
   }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {displayedImages.map((image, index) => (
+        {paginatedImages.map((image, index) => (
           <div
             key={image.id}
             className="flex flex-col space-y-4 justify-center shadow-custom-drop p-3 bg-white w-[220px] 
             h-[313px] rounded-xl mx-auto lazy-load"
             ref={lastImageElementRef}
-            
           >
             <Image
               src={image.imageUrl}
@@ -114,8 +135,7 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
                 {image.date}
               </p>
               {isLoggedIn && (
-                <div className=""    onClick={() => toggleFavorite(image.id)}>
-                  
+                <div onClick={() => toggleFavorite(image.id)}>
                   {favorites[image.id] ? (
                     <Image
                       src="/icon/filled-heart.svg"
@@ -139,14 +159,34 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center my-6 space-x-4">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 bg-gray-300 rounded ${currentPage === 1 ? "opacity-50" : ""}`}
+        >
+          Previous
+        </button>
+        <span className="text-gray-700">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 bg-gray-300 rounded ${currentPage === totalPages ? "opacity-50" : ""}`}
+        >
+          Next
+        </button>
+      </div>
+
       <ImagePopup
         isOpen={IsModalopen}
         onClose={closeModal}
         imageSrc={selectImage}
         username={selectUsername}
         date={selectDate}
-        
-        
       />
     </>
   );

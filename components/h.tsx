@@ -15,10 +15,11 @@ const Header = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId"); 
+    const userId = localStorage.getItem("userId");
     if (userId) {
       setIsLoggedIn(true);
-      fetchUserDetails(userId); 
+      // Fetch user details if logged in
+      fetchUserDetails(userId);
     }
   }, []);
 
@@ -33,19 +34,11 @@ const Header = () => {
         const data = await response.json();
         setUsername(data.username);
       } else {
-        console.error("Failed to fetch user details.");
+        console.error("Failed to fetch user details");
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("userId"); // Remove userId from localStorage
-    document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    setIsLoggedIn(false);
-    setUsername(null);
-    router.push("/login"); // Redirect to login page after logout
   };
 
   const handleImageClick = () => {
@@ -54,6 +47,12 @@ const Header = () => {
 
   const closeModal = () => {
     setIsSharePicPopup(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("userId");
+    setIsLoggedIn(false);
+    router.push("/login");
   };
 
   return (
@@ -67,35 +66,35 @@ const Header = () => {
           >
             PicShare
           </Link>
-           {/* Links Visible to All Users */}
           {isLoggedIn && (
-         <>
-          <Link
-            href="/"
-            className={`
-              ${
-                pathname === "/"
-                  ? "text-daybreak-blue border-daybreak-blue border-b-2"
-                  : "text-gray-800"
-              } font-medium hover:text-daybreak-blue 
-              text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
-          >
-            Home
-          </Link>
-
-          <Link
-            href="/favorite"
-            className={`
-              ${
-                pathname === "/favorite"
-                  ? "text-daybreak-blue border-daybreak-blue border-b-2"
-                  : "text-gray-800"
-              } font-medium hover:text-daybreak-blue 
-              text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
-          >
-            Favourite
-          </Link>
-          </>
+            <>
+              <Link
+                href="/"
+                className={`
+                  ${
+                    pathname === "/"
+                      ? "text-daybreak-blue border-daybreak-blue border-b-2"
+                      : "text-gray-800"
+                  } font-medium 
+                  hover:text-daybreak-blue 
+                  text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
+              >
+                Home
+              </Link>
+              <Link
+                href="/favorite"
+                className={`
+                  ${
+                    pathname === "/favorite"
+                      ? "text-daybreak-blue border-daybreak-blue border-b-2"
+                      : "text-gray-800"
+                  } font-medium 
+                  hover:text-daybreak-blue 
+                  text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
+              >
+                Favourite
+              </Link>
+            </>
           )}
         </div>
 
@@ -116,7 +115,7 @@ const Header = () => {
             </button>
           </div>
         ) : (
-          // Not Logged-in User Actions
+          // Log in Button for Logged-out User
           <div className="mt-4 sm:mt-0 text-center flex-shrink-0">
             <BlueButton href="/login" value="Login" />
           </div>
