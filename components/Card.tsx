@@ -161,7 +161,7 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-center items-center my-6 space-x-4">
+      <div className="flex justify-center items-center my-4 space-x-4">
         <button
           onClick={handlePreviousPage}
           disabled={currentPage === 1}

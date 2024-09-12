@@ -6,6 +6,7 @@ import Link from "next/link";
 
 interface HomePageProps {
   loggedIn: boolean;
+
 }
 
 export default function HomePage({ loggedIn }: HomePageProps) {

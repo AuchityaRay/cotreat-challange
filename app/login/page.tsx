@@ -105,19 +105,21 @@ import { useRouter } from 'next/navigation';
 const Login = () => {
   const [username, setUsername] = useState('');
   const [userId, setUserId] = useState('');
+  const [accessToken, setAccessToken] = useState(''); 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter(); 
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
-    if (storedUserId) {
-      // If the user is already logged in, redirect them to the homepage
+    const storedAccessToken = localStorage.getItem('access_token');
+    if (storedUserId && storedAccessToken) {
+   
       router.replace('/');
     }
   }, [router]);
 
-  // Function to validate the form before submission
+
   const validateForm = () => {
     if (username.trim() === '') {
       setError('Username is required.');
@@ -127,19 +129,19 @@ const Login = () => {
       setError('Username must be at least 3 characters long.');
       return false;
     }
-    setError(''); // Clear any previous errors
+    setError(''); 
     return true;
   };
 
-  // Handle form submission
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setLoading(true); // Show loading indicator while submitting
+    setLoading(true);
     try {
       const response = await axios.post('http://localhost:3000/user/login', 
-        { username },  // Send username in request body
+        { username },  
         {
           headers: {
             'Content-Type': 'application/json'
@@ -147,20 +149,21 @@ const Login = () => {
         }
       );
 
-      const { userId } = response.data;  // Extract userId from API response
-      setUserId(userId);  // Update state with userId
-      localStorage.setItem('userId', userId);  // Store userId in localStorage for session persistence
-      setError('');  // Clear any errors
+      const { userId, access_token } = response.data;  
+      setUserId(userId);  
+      setAccessToken(access_token); 
 
-      // Set the userId as a cookie
-      document.cookie = `userId=${userId}; path=/;`;
 
-      // Redirect to homepage after successful login
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('useraccess', access_token);
+
+      setError('');  
+
       router.push('/');
     } catch (err) {
-      setError('Failed to login. Please try again.');  // Show error message if login fails
+      setError('Failed to login. Please try again.');  
     } finally {
-      setLoading(false);  // Hide loading indicator after submission is complete
+      setLoading(false); 
     }
   };
 

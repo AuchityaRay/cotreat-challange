@@ -1,4 +1,4 @@
-// app/api/user/[userId]/route.ts
+
 
 import { NextResponse } from 'next/server';
 

@@ -3,16 +3,20 @@ import { useState, useEffect } from "react";
 const useFavorites = () => {
   const [favorites, setFavorites] = useState<{ [key: string]: boolean }>({});
 
+  // Retrieve userId and accessToken once when the hook is initialized
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("useraccess");
+
   useEffect(() => {
     const loadFavorites = async () => {
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
+      if (!userId || !accessToken) return;
 
       try {
         const response = await fetch(`http://localhost:3000/user/${userId}/favorites`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Add Bearer token in headers
           },
         });
 
@@ -32,11 +36,10 @@ const useFavorites = () => {
     };
 
     loadFavorites();
-  }, []);
+  }, [userId, accessToken]); // Only run the effect when userId or accessToken changes
 
   const toggleFavorite = async (imageId: string) => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
+    if (!userId || !accessToken) {
       alert("You need to be logged in to manage favorites.");
       return;
     }
@@ -50,6 +53,7 @@ const useFavorites = () => {
           method: isFavorited ? "DELETE" : "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Add Bearer token in headers
           },
         }
       );

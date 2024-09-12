@@ -1,4 +1,7 @@
+// 
+
 import { useState, useEffect } from "react";
+import io from "socket.io-client";  // Import socket.io-client for WebSocket
 
 type SharedImage = {
   id: string;
@@ -13,6 +16,7 @@ const useSharedImages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch existing images initially
   const fetchImages = async () => {
     try {
       const response = await fetch("http://localhost:3000/shared-images", {
@@ -41,21 +45,36 @@ const useSharedImages = () => {
   };
 
   useEffect(() => {
-    const intervalId = setInterval(async () => {
+    const initializeImages = async () => {
       try {
-        const newImages = await fetchImages();
-        if (JSON.stringify(newImages) !== JSON.stringify(images)) {
-          setImages(newImages);  
-        }
+        const initialImages = await fetchImages();
+        setImages(initialImages);
       } catch (fetchError) {
         setError((fetchError as Error).message);
       } finally {
         setLoading(false);
       }
-    }, 3000); 
+    };
 
-    return () => clearInterval(intervalId);  
-  }, [images]);
+    // Initial fetch for images
+    initializeImages();
+
+    // Set up WebSocket connection
+    const socket = io('http://localhost:3000');  // Connect to your WebSocket server
+
+    // Listen for 'newImage' event from the server
+    socket.on('newImage', (newImage: SharedImage) => {
+      console.log('New image received via WebSocket:', newImage);
+
+      // Update the images array with the new image
+      setImages((prevImages) => [newImage, ...prevImages]);
+    });
+
+    // Clean up on unmount
+    return () => {
+      socket.disconnect();  // Close WebSocket connection when component unmounts
+    };
+  }, []);
 
   return { images, loading, error };
 };

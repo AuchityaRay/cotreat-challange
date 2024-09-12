@@ -14,21 +14,47 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    const userId = localStorage.getItem("userId"); 
-    if (userId) {
-      setIsLoggedIn(true);
-      fetchUserDetails(userId); 
-    }
-  }, []);
+  const checkLoginStatus = () => {
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("useraccess"); // Get token from localStorage
 
-  const fetchUserDetails = async (userId: string) => {
+    if (userId && token) {
+      setIsLoggedIn(true);
+      fetchUserDetails(userId, token); // Pass the token to fetch user details
+    } else {
+      setIsLoggedIn(false);
+      setUsername(null);
+    }
+  };
+
+  // Check login status on component mount and listen for storage changes
+  useEffect(() => {
+    checkLoginStatus(); // Run once on component mount
+
+    // Listener for 'storage' event across tabs
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "userId" || event.key === "useraccess") {
+        checkLoginStatus(); // Re-check login status when these keys change
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []); // Empty dependency array ensures this runs once
+
+  const fetchUserDetails = async (userId: string, token: string) => {
     try {
       const response = await fetch(`http://localhost:3000/user/${userId}`, {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,  // Add Bearer token in the Authorization header
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         setUsername(data.username);
@@ -42,10 +68,12 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("userId"); // Remove userId from localStorage
-    document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    localStorage.removeItem("useraccess"); // Remove access_token from localStorage
     setIsLoggedIn(false);
     setUsername(null);
-    router.push("/login"); // Redirect to login page after logout
+    router.push("/login"); 
+
+    window.dispatchEvent(new Event("storage"));
   };
 
   const handleImageClick = () => {
@@ -67,35 +95,34 @@ const Header = () => {
           >
             PicShare
           </Link>
-           {/* Links Visible to All Users */}
-          {isLoggedIn && (
-         <>
-          <Link
-            href="/"
-            className={`
-              ${
-                pathname === "/"
-                  ? "text-daybreak-blue border-daybreak-blue border-b-2"
-                  : "text-gray-800"
-              } font-medium hover:text-daybreak-blue 
-              text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
-          >
-            Home
-          </Link>
 
-          <Link
-            href="/favorite"
-            className={`
-              ${
-                pathname === "/favorite"
-                  ? "text-daybreak-blue border-daybreak-blue border-b-2"
-                  : "text-gray-800"
-              } font-medium hover:text-daybreak-blue 
+          {/* Links Visible to All Users */}
+          {isLoggedIn && (
+            <>
+              <Link
+                href="/"
+                className={`${
+                  pathname === "/"
+                    ? "text-daybreak-blue border-daybreak-blue border-b-2"
+                    : "text-gray-800"
+                } font-medium hover:text-daybreak-blue 
               text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
-          >
-            Favourite
-          </Link>
-          </>
+              >
+                Home
+              </Link>
+
+              <Link
+                href="/favorite"
+                className={`${
+                  pathname === "/favorite"
+                    ? "text-daybreak-blue border-daybreak-blue border-b-2"
+                    : "text-gray-800"
+                } font-medium hover:text-daybreak-blue 
+              text-sm sm:text-base hover:border-b-2 pb-6 hover:border-daybreak-blue`}
+              >
+                Favourite
+              </Link>
+            </>
           )}
         </div>
 

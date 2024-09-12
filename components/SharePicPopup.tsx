@@ -17,8 +17,15 @@ const SharePicPopup: React.FC<SharePicPopupProps> = ({ isOpen, onClose }) => {
 
   const handleShare = async () => {
     const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("useraccess"); // Get the access token from localStorage
+
     if (!userId) {
       setError("User is not logged in.");
+      return;
+    }
+
+    if (!accessToken) {
+      setError("Access token is missing. Please log in again.");
       return;
     }
 
@@ -35,6 +42,7 @@ const SharePicPopup: React.FC<SharePicPopupProps> = ({ isOpen, onClose }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`, // Include the Bearer token in the headers
         },
         body: JSON.stringify({
           imageTitle,
@@ -121,7 +129,6 @@ const SharePicPopup: React.FC<SharePicPopupProps> = ({ isOpen, onClose }) => {
             <BlueButton
               value={isLoading ? "Sharing..." : "Share"}
               onClick={handleShare}
-              
             />
           )}
         </div>
