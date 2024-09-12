@@ -3,10 +3,10 @@
 import Image from "next/image";
 import React, { useState, useRef, useCallback } from "react";
 import ImagePopup from "./ImagePopup";
-import useAuth from "@/hooks/useAuth";
+// import useAuth from "@/hooks/useAuth";
 import useSharedImages from "@/hooks/useSharedImages";
 import useFavorites from "@/hooks/useFavorites";
-
+import { useAuth } from "@/context/AuthContext";
 type CardProps = {
   favoritesOnly?: boolean;
 };
@@ -22,7 +22,7 @@ const SkeletonCard = () => (
 );
 
 const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
   const { images, loading, error } = useSharedImages();
   const { favorites, toggleFavorite } = useFavorites();
   const [IsModalopen, setIsModalOpen] = useState(false);
@@ -88,7 +88,7 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
   }
 
   if (paginatedImages.length === 0) {
-    return <p className="text-center text-gray-500">No favorite pictures found.</p>;
+    return <p className="text-center text-gray-500">No pictures found.</p>;
   }
 
   const handleNextPage = () => {
@@ -110,31 +110,34 @@ const Card: React.FC<CardProps> = ({ favoritesOnly = false }) => {
           <div
             key={image.id}
             className="flex flex-col space-y-4 justify-center shadow-custom-drop p-3 bg-white w-[220px] 
-            h-[313px] rounded-xl mx-auto lazy-load"
+            min-h-[313px] rounded-xl mx-auto lazy-load"
             ref={lastImageElementRef}
           >
+   
             <Image
               src={image.imageUrl}
               width={500}
               height={500}
               alt="card_image"
-              className="w-64 h-64 object-cover"
+              className="w-64 min-h-64 object-cover"
               onClick={() => handleImageClick(image.imageUrl, image.username, image.date)}
             />
+          
+          
             <h2 className="font-bold text-base text-center">
               {image.imageTitle}
             </h2>
 
             <div
               className={`${
-                isLoggedIn ? "justify-between" : "justify-center"
+                user ? "justify-between" : "justify-center"
               } flex flex-row item-center`}
             >
               <p className="text-[14px] text-left font-normal text-gray-500">
                 {image.username} <br />
                 {image.date}
               </p>
-              {isLoggedIn && (
+              {user && (
                 <div onClick={() => toggleFavorite(image.id)}>
                   {favorites[image.id] ? (
                     <Image

@@ -1,64 +1,69 @@
 "use client"
+import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import axios from 'axios';
 
-import React, { createContext, useState, useEffect, ReactNode } from "react";
 
 interface AuthContextType {
-  isLoggedIn: boolean;
-  username: string | null;
-  login: (username: string) => void;
+  user: any | null;
+  login: (userId: string, token: string) => void;
   logout: () => void;
+  isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  isLoggedIn: false,
-  username: null,
-  login: () => {},
-  logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [username, setUsername] = useState<string | null>(null);
+  const [user, setUser] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (userId) {
-      // Assuming fetching user details and setting the logged-in state
-      fetchUserDetails(userId);
+
+    const userId = localStorage.getItem('userId');
+    const access_token = localStorage.getItem('useraccess');
+
+    if (userId && access_token) {
+      login(userId, access_token);
+    } else {
+      setIsLoading(false); 
     }
   }, []);
 
-  const fetchUserDetails = async (userId: string) => {
+  const login = async (userId: string, token: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/user/${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setUsername(data.username);
-        setIsLoggedIn(true);
-      }
+      setIsLoading(true);
+      const response = await axios.get(`http://localhost:3000/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data);
     } catch (error) {
-      console.error("Error fetching user details", error);
+      console.error('Failed to fetch user data', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const login = (username: string) => {
-    // Simulating a successful login
-    setUsername(username);
-    setIsLoggedIn(true);
-    localStorage.setItem("userId", "someUserId"); // Normally, this would come from the API response
-  };
-
   const logout = () => {
-    setUsername(null);
-    setIsLoggedIn(false);
-    localStorage.removeItem("userId");
+    localStorage.removeItem('userId');
+    localStorage.removeItem('useraccess');
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => React.useContext(AuthContext);
+// Custom hook for accessing the context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

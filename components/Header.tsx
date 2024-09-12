@@ -1,79 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import SharePicPopup from "./SharePicPopup";
 import BlueButton from "./BlueButton";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const [isSharePicPopup, setIsSharePicPopup] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
-
-  const router = useRouter();
   const pathname = usePathname();
-
-  const checkLoginStatus = () => {
-    const userId = localStorage.getItem("userId");
-    const token = localStorage.getItem("useraccess"); // Get token from localStorage
-
-    if (userId && token) {
-      setIsLoggedIn(true);
-      fetchUserDetails(userId, token); // Pass the token to fetch user details
-    } else {
-      setIsLoggedIn(false);
-      setUsername(null);
-    }
-  };
-
-  // Check login status on component mount and listen for storage changes
+  const router = useRouter();
+  const { user, logout, isLoading, login  } = useAuth(); 
   useEffect(() => {
-    checkLoginStatus(); // Run once on component mount
+    const intervalId = setInterval(() => {
+      if (!user && !isLoading) {
+        const userId = localStorage.getItem("userId");
+        const accessToken = localStorage.getItem("useraccess");
 
-    // Listener for 'storage' event across tabs
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "userId" || event.key === "useraccess") {
-        checkLoginStatus(); // Re-check login status when these keys change
+       
+        if (userId && accessToken) {
+          login(userId, accessToken);
+        }
       }
-    };
 
-    window.addEventListener("storage", handleStorageChange);
-
-    // Cleanup listener on component unmount
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []); // Empty dependency array ensures this runs once
-
-  const fetchUserDetails = async (userId: string, token: string) => {
-    try {
-      const response = await fetch(`http://localhost:3000/user/${userId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,  // Add Bearer token in the Authorization header
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsername(data.username);
-      } else {
-        console.error("Failed to fetch user details.");
+     
+      if (user) {
+        clearInterval(intervalId);
       }
-    } catch (error) {
-      console.error("Error fetching user details:", error);
-    }
-  };
+    }, 1000); 
+
+   
+    return () => clearInterval(intervalId);
+  }, [user, isLoading, login]);
 
   const handleLogout = () => {
-    localStorage.removeItem("userId"); // Remove userId from localStorage
-    localStorage.removeItem("useraccess"); // Remove access_token from localStorage
-    setIsLoggedIn(false);
-    setUsername(null);
-    router.push("/login"); 
-
-    window.dispatchEvent(new Event("storage"));
+    logout();
+    router.push("/login");
   };
 
   const handleImageClick = () => {
@@ -96,8 +59,8 @@ const Header = () => {
             PicShare
           </Link>
 
-          {/* Links Visible to All Users */}
-          {isLoggedIn && (
+          {/* Links Visible to Logged-in Users Only */}
+          {user && (
             <>
               <Link
                 href="/"
@@ -127,14 +90,14 @@ const Header = () => {
         </div>
 
         {/* Logged-in User Actions */}
-        {isLoggedIn ? (
+        {user ? (
           <div className="flex items-center space-x-4 sm:space-x-6">
             <BlueButton value="Share Pic" onClick={handleImageClick} />
-            {username && (
-              <h2 className="font-medium text-gray-500 text-sm sm:text-base">
-                Hi {username}
-              </h2>
-            )}
+
+            <h2 className="font-medium text-gray-500 text-sm sm:text-base">
+              Hi {user.username} {/* Show user name */}
+            </h2>
+
             <button
               onClick={handleLogout}
               className="text-daybreak-blue hover:bg-daybreak-blue hover:text-white py-1 px-3 h-10 font-normal text-sm sm:text-base hover:rounded-sm"

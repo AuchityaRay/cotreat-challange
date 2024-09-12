@@ -10,6 +10,7 @@ interface HomePageProps {
 }
 
 export default function HomePage({ loggedIn }: HomePageProps) {
+ 
   return (
     <div className="flex flex-col space-y-6 max-w-6xl w-full py-5 mx-auto">
       {!loggedIn && (

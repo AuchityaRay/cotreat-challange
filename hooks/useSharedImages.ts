@@ -1,5 +1,3 @@
-// 
-
 import { useState, useEffect } from "react";
 import io from "socket.io-client";  // Import socket.io-client for WebSocket
 
@@ -16,7 +14,7 @@ const useSharedImages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch existing images initially
+
   const fetchImages = async () => {
     try {
       const response = await fetch("http://localhost:3000/shared-images", {
@@ -35,7 +33,7 @@ const useSharedImages = () => {
         imageUrl: item.imageUrl,
         imageTitle: item.imageTitle,
         username: item.user.username,
-        date: new Date(item.createdAt).toLocaleDateString("en-GB"), // Formatting date to dd/mm/yy
+        date: new Date(item.createdAt).toLocaleDateString("en-GB"), 
       }));
 
       return formattedData;
@@ -56,23 +54,23 @@ const useSharedImages = () => {
       }
     };
 
-    // Initial fetch for images
+   
     initializeImages();
 
-    // Set up WebSocket connection
-    const socket = io('http://localhost:3000');  // Connect to your WebSocket server
+   
+    const socket = io('http://localhost:3000');  
 
-    // Listen for 'newImage' event from the server
+   
     socket.on('newImage', (newImage: SharedImage) => {
       console.log('New image received via WebSocket:', newImage);
 
-      // Update the images array with the new image
+     
       setImages((prevImages) => [newImage, ...prevImages]);
     });
 
-    // Clean up on unmount
+   
     return () => {
-      socket.disconnect();  // Close WebSocket connection when component unmounts
+      socket.disconnect();  
     };
   }, []);
 
